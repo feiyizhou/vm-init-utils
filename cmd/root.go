@@ -7,6 +7,7 @@ func NewChangeCmd() *cobra.Command {
 
 	rootCmd.AddCommand(
 		ipChangeCmd,
+		pwdChangeCmd,
 	)
 
 	return rootCmd
