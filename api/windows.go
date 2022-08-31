@@ -10,20 +10,6 @@ type Windows struct {
 	Sys     Sys     `json:"sys"`
 }
 
-type Network struct {
-	Name     string `json:"name"`
-	Source   string `json:"source"`
-	Addr     string `json:"addr"`
-	Mask     string `json:"mask"`
-	Gateway  string `json:"gateway"`
-	Gwmetric string `json:"gwmetric"`
-}
-
-type Sys struct {
-	UserName string `json:"userName"`
-	PWD      string `json:"pwd"`
-}
-
 func (w *Windows) SetIP() error {
 	ipArgs := []string{
 		"interface",

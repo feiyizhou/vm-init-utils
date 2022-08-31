@@ -1,9 +1,22 @@
 package api
 
-type Linux struct{}
+import "github.com/vishvananda/netlink"
+
+type Linux struct {
+	Network Network `json:"network"`
+	Sys     Sys     `json:"sys"`
+}
 
 func (l *Linux) SetIP() error {
-	return nil
+	link, err := netlink.LinkByName(l.Network.Name)
+	if err != nil {
+		return err
+	}
+	addr, err := netlink.ParseAddr(l.Network.Addr)
+	if err != nil {
+		return err
+	}
+	return netlink.AddrAdd(link, addr)
 }
 
 func (l *Linux) SetPWD() error {
