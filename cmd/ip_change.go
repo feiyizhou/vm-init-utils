@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"vm-init-utils/api"
 	"vm-init-utils/common"
+	"vm-init-utils/config"
 )
 
 var ipChangeCmd = &cobra.Command{
@@ -33,7 +34,16 @@ var ipChangeCmd = &cobra.Command{
 }
 
 func setLinuxIP() error {
-	linux := &api.Linux{}
+	networkConf := config.GetSystemConf().Network
+	linux := &api.Linux{
+		Network: api.Network{
+			Name: networkConf.Name,
+			Addr: networkConf.Addr,
+
+			Mask:    networkConf.Mask,
+			Gateway: networkConf.Gateway,
+		},
+	}
 	return linux.SetIP()
 }
 

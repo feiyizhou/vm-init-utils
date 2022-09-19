@@ -6,5 +6,14 @@ const (
 )
 
 const (
-	SERVER_HOST = ""
+	Centos             = "centos"
+	Ubuntu             = "ubuntu"
+	OSTypeFlagFilePath = "/etc/redhat-release"
+)
+
+const (
+	YamlConfigHomePath = "."
+	YamlConfigName     = "config"
+	YamlConfigType     = "yaml"
+	YamlSysConfigKey   = "system"
 )

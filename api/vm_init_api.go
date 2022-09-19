@@ -1,12 +1,12 @@
 package api
 
 type Network struct {
-	Name     string `json:"name"`
-	Source   string `json:"source"`
-	Addr     string `json:"addr"`
-	Mask     string `json:"mask"`
-	Gateway  string `json:"gateway"`
-	Gwmetric string `json:"gwmetric"`
+	Name    string `json:"name"`
+	Addr    string `json:"addr"`
+	Mask    string `json:"mask"`
+	Gateway string `json:"gateway"`
+	DNS1    string `json:"dns1"`
+	DNS2    string `json:"dns2"`
 }
 
 type Sys struct {

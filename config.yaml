@@ -1,0 +1,9 @@
+system:
+  hostname: sobey-1
+  network:
+    name: eth0
+    addr: 10.10.10.10
+    gateway: 10.10.10.1
+    mask: 8.8.8.8
+    dns: 10.10.10.1
+    mac: a1,a1,a1,a1,a1,a1
