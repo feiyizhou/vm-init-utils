@@ -45,8 +45,9 @@ func (ls *LinuxService) SetNetWork(network *modules.Network) error {
 		utils.DoOrDieWithMsg(err, "Rename network config file failed")
 
 		// 创建新文件并写入新的网络配置
-		confStr := fmt.Sprintf(common.CentosNetConfTemplate, uuid, network.MACAddr, network.IPAddr,
-			network.NETMask, network.GateWay, network.DNS1, network.DNS2)
+		confStr := fmt.Sprintf(common.CentosNetConfTemplate, network.Name, uuid, network.Name,
+			network.MACAddr, network.IPAddr, network.NETMask, network.GateWay, network.DNS1,
+			network.DNS2)
 		newFile, err := os.Create(filePath)
 		utils.DoOrDieWithMsg(err, "Create new config file failed")
 		_, err = newFile.WriteString(confStr)
