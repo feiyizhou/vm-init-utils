@@ -28,7 +28,7 @@ func (ls *LinuxService) SetNetWork(network *modules.Network) error {
 		oriFile, err := os.Open(filePath)
 		utils.DieWithMsg(err != nil, "Open centos network config file error")
 		utils.DieWithMsg(oriFile == nil, "Centos network config file is empty")
-		defer oriFile.Close()
+
 		br := bufio.NewReader(oriFile)
 		for {
 			a, _, c := br.ReadLine()
@@ -40,9 +40,11 @@ func (ls *LinuxService) SetNetWork(network *modules.Network) error {
 			}
 		}
 
-		// 备份原始文件
-		err = os.Rename(filePath, fmt.Sprintf("%s-origin", filePath))
-		utils.DoOrDieWithMsg(err, "Rename network config file failed")
+		_ = oriFile.Close()
+
+		// 删除原始文件
+		err = os.Remove(filePath)
+		utils.DieWithMsg(err != nil, "Delete the origin conf file failed")
 
 		// 创建新文件并写入新的网络配置
 		confStr := fmt.Sprintf(common.CentosNetConfTemplate, network.Name, uuid, network.Name,

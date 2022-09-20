@@ -15,7 +15,11 @@ var ipChangeCmd = &cobra.Command{
 	Short: "set-ip",
 	Long:  "set-ip",
 	Run: func(cmd *cobra.Command, args []string) {
-		conf := config.GetSystemConf().Network
+		confFilePath := ""
+		if len(args) != 0 {
+			confFilePath = args[0]
+		}
+		conf := config.GetSystemConf(confFilePath).Network
 		network := &modules.Network{
 			Name:    conf.Name,
 			MACAddr: conf.MACAddr,

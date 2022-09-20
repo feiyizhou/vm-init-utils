@@ -27,17 +27,20 @@ type NetworkConfig struct {
 	DNS2    string `json:"dns2" mapstructure:"dns2"`
 }
 
-func GetSystemConf() *SysConfig {
-	conf, err := initSystemConf()
+func GetSystemConf(confFilePath string) *SysConfig {
+	conf, err := initSystemConf(confFilePath)
 	utils.CheckErr(err)
 	utils.DieWithMsg(conf == nil, "System configuration is not exist")
 	return conf
 }
 
-func initSystemConf() (*SysConfig, error) {
+func initSystemConf(confFilePath string) (*SysConfig, error) {
 	viper.AddConfigPath(common.YamlConfigHomePath)
 	viper.SetConfigName(common.YamlConfigName)
 	viper.SetConfigType(common.YamlConfigType)
+	if len(confFilePath) != 0 {
+		viper.SetConfigFile(confFilePath)
+	}
 	err := viper.ReadInConfig()
 	if err != nil {
 		return nil, fmt.Errorf("Fatal error config file: %s \n", err)
