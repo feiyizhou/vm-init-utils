@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 	"log"
 	"runtime"
-	"vm-init-utils/api"
 	"vm-init-utils/common"
 )
 
@@ -33,16 +32,9 @@ var pwdChangeCmd = &cobra.Command{
 }
 
 func setLinuxPwd() error {
-	linux := &api.Linux{}
-	return linux.SetPWD()
+	return nil
 }
 
 func setWindowsPwd() error {
-	windows := &api.Windows{
-		Sys: api.Sys{
-			UserName: "",
-			PWD:      "",
-		},
-	}
-	return windows.SetPWD()
+	return nil
 }

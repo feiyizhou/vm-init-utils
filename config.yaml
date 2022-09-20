@@ -1,9 +1,11 @@
 system:
   hostname: sobey-1
+  passwd: root
   network:
-    name: eth0
-    addr: 10.10.10.10
-    gateway: 10.10.10.1
-    mask: 8.8.8.8
-    dns: 10.10.10.1
-    mac: a1,a1,a1,a1,a1,a1
+    name: ens33
+    macAddr: 00:AA:BB:CC:DD:FF
+    ipAddr: 192.168.206.136
+    netmask: 255.255.255.0
+    gateway: 192.168.206.2
+    dns1: 192.168.206.2
+    dns2:

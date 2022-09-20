@@ -2,26 +2,7 @@ package utils
 
 import (
 	"log"
-	"os"
-	"os/exec"
 )
-
-func ExecShell(args []string, in, out, erf *os.File) error {
-	command := exec.Command("sh", args...)
-	if in == nil {
-		in = os.Stdin
-	}
-	if out == nil {
-		out = os.Stdout
-	}
-	if erf == nil {
-		erf = os.Stderr
-	}
-	command.Stdin = in
-	command.Stdout = out
-	command.Stderr = erf
-	return command.Run()
-}
 
 func DoOrDieWithMsg(err error, msg string) {
 	if err != nil {

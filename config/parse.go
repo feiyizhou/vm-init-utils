@@ -12,17 +12,19 @@ import (
 )
 
 type SysConfig struct {
-	Hostname string        `json:"hostname" mapstructure:"hostname"`
-	Network  networkConfig `json:"network" mapstructure:"network"`
+	Hostname string         `json:"hostname" mapstructure:"hostname"`
+	PASSWD   string         `json:"passwd" mapstructure:"passwd"`
+	Network  *NetworkConfig `json:"network" mapstructure:"network"`
 }
 
-type networkConfig struct {
+type NetworkConfig struct {
 	Name    string `json:"name" mapstructure:"name"`
-	Addr    string `json:"addr" mapstructure:"addr"`
-	Gateway string `json:"gateway" mapstructure:"gateway"`
-	Mask    string `json:"mask" mapstructure:"mask"`
-	DNS     string `json:"dns" mapstructure:"dns"`
-	MAC     string `json:"mac" mapstructure:"mac"`
+	MACAddr string `json:"macAddr" mapstructure:"macAddr"`
+	IPAddr  string `json:"ipAddr" mapstructure:"ipAddr"`
+	NETMASK string `json:"netmask" mapstructure:"netmask"`
+	GATEWAY string `json:"gateway" mapstructure:"gateway"`
+	DNS1    string `json:"dns1" mapstructure:"dns1"`
+	DNS2    string `json:"dns2" mapstructure:"dns2"`
 }
 
 func GetSystemConf() *SysConfig {

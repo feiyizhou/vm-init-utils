@@ -9,6 +9,34 @@ const (
 	Centos             = "centos"
 	Ubuntu             = "ubuntu"
 	OSTypeFlagFilePath = "/etc/redhat-release"
+
+	CentosNetConfFilePath = "/etc/sysconfig/network-scripts/ifcfg-"
+)
+
+const (
+	CentosNetConfTemplate = `
+TYPE="Ethernet"
+PROXY_METHOD="none"
+BROWSER_ONLY="no"
+BOOTPROTO="static"
+DEFROUTE="yes"
+IPV4_FAILURE_FATAL="no"
+IPV6INIT="yes"
+IPV6_AUTOCONF="yes"
+IPV6_DEFROUTE="yes"
+IPV6_FAILURE_FATAL="no"
+IPV6_ADDR_GEN_MODE="stable-privacy"
+NAME="ens33"
+UUID=%s
+DEVICE="ens33"
+ONBOOT="yes"
+MACADDR=%s
+IPADDR=%s
+NETMASK=%s
+GATEWAY=%s
+DNS1=%s
+DNS2=%s
+`
 )
 
 const (
