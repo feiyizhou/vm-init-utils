@@ -13,8 +13,13 @@ import (
 
 type SysConfig struct {
 	Hostname string         `json:"hostname" mapstructure:"hostname"`
-	PASSWD   string         `json:"passwd" mapstructure:"passwd"`
+	User     User           `json:"user" mapstructure:"user"`
 	Network  *NetworkConfig `json:"network" mapstructure:"network"`
+}
+
+type User struct {
+	Name   string `json:"name" mapstructure:"name"`
+	PASSWD string `json:"passwd" mapstructure:"passwd"`
 }
 
 type NetworkConfig struct {

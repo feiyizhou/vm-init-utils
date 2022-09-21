@@ -17,6 +17,14 @@ func NewLinuxService() *LinuxService {
 	return &LinuxService{}
 }
 
+func (ls *LinuxService) SetHostname(hostname string) error {
+	args := []string{
+		"set-hostname",
+		hostname,
+	}
+	return utils.ExecShell("hostnamectl", args, nil, nil, nil)
+}
+
 func (ls *LinuxService) SetNetWork(network *modules.Network) error {
 	osType, err := utils.GetOSType()
 	utils.DoOrDieWithMsg(err, "get os type info error")
