@@ -64,7 +64,7 @@ func (ls *LinuxService) SetNetWork(network *modules.Network) error {
 		err = utils.ExecShell("service", args, nil, nil, nil)
 		utils.DieWithMsg(err != nil, "Restart network service failed")
 	case common.Ubuntu:
-
+		utils.DieWithMsg(true, "Unsupported os type")
 	default:
 		utils.DieWithMsg(strings.EqualFold("", osType), "Unknown os type")
 	}
