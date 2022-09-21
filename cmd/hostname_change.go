@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"k8s.io/kubernetes/pkg/kubelet/kubeletconfig/util/log"
+	"log"
 	"runtime"
 	"vm-init-utils/common"
 	"vm-init-utils/config"
@@ -23,7 +23,7 @@ var hostnameChangeCmd = &cobra.Command{
 		switch runtime.GOOS {
 		case common.LINUX:
 			if len(hostname) == 0 {
-				log.Infof("Hostname is empty")
+				log.Println("Hostname is empty")
 				return
 			}
 			err := services.NewLinuxService().SetHostname(hostname)
