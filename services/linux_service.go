@@ -31,7 +31,6 @@ func (ls *LinuxService) SetNetWork(network *modules.Network) error {
 	utils.DoOrDieWithMsg(err, "get os type info error")
 	switch osType {
 	case common.Centos:
-		fmt.Println(network)
 		var filePath string
 		if len(network.Name) == 0 {
 			linkName, err := getLinkName()
