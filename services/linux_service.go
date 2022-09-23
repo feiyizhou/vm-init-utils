@@ -69,10 +69,10 @@ func (ls *LinuxService) SetNetWork(network *modules.Network) error {
 
 		// 重启网络服务
 		args := []string{
-			"network",
 			"restart",
+			"network",
 		}
-		err = utils.ExecShell("service", args, nil, nil, nil)
+		err = utils.ExecShell("systemctl", args, nil, nil, nil)
 		utils.DieWithMsg(err != nil, "Restart network service failed")
 	case common.Ubuntu:
 		utils.DieWithMsg(true, "Unsupported os type")
