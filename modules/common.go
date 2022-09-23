@@ -6,8 +6,10 @@ type Network struct {
 	IPAddr  string `json:"ipAddr"`
 	NETMask string `json:"netMask"`
 	GateWay string `json:"gateWay"`
-	DNS1    string `json:"dns1"`
-	DNS2    string `json:"dns2"`
+	UUID    string `json:"uuid"`
+	DNS     string `json:"dns"`  // 保留字段
+	DNS1    string `json:"dns1"` // 主DNS
+	DNS2    string `json:"dns2"` // 副DNS
 }
 
 type Sys struct {
