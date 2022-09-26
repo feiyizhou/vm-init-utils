@@ -1,8 +1,5 @@
 system:
   hostname: sobey-1
-  user:
-    name: user-test
-    passwd: user-test
   network:
     name:
     macAddr: 00:AA:BB:04:03:02
