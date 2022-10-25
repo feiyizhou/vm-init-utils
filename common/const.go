@@ -6,10 +6,9 @@ const (
 )
 
 const (
-	Centos             = "centos"
-	Ubuntu             = "ubuntu"
-	OSTypeFlagFilePath = "/etc/redhat-release"
-
+	Centos                = "centos"
+	Ubuntu                = "ubuntu"
+	OSTypeFlagFilePath    = "/etc/redhat-release"
 	CentosNetConfFilePath = "/etc/sysconfig/network-scripts/ifcfg-"
 )
 
@@ -44,4 +43,6 @@ const (
 	YamlConfigName     = "config"
 	YamlConfigType     = "yaml"
 	YamlSysConfigKey   = "system"
+
+	NetshOutputFilePath = "c://netsh_output"
 )

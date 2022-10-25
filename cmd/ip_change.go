@@ -6,8 +6,9 @@ import (
 	"runtime"
 	"vm-init-utils/common"
 	"vm-init-utils/config"
+	"vm-init-utils/linux_services"
 	"vm-init-utils/modules"
-	"vm-init-utils/services"
+	"vm-init-utils/windows_services"
 )
 
 var ipChangeCmd = &cobra.Command{
@@ -31,13 +32,13 @@ var ipChangeCmd = &cobra.Command{
 		}
 		switch runtime.GOOS {
 		case common.LINUX:
-			err := services.NewLinuxService().SetNetWork(network)
+			err := linux_services.NewLinuxService().SetNetWork(network)
 			if err != nil {
 				log.Fatalf("Set linux ip err, err : %v \n", err)
 				return
 			}
 		case common.WINDOWS:
-			err := services.NewWindowsService().SetNetWork(network)
+			err := windows_services.NewWindowsService().SetNetWork(network)
 			if err != nil {
 				log.Fatalf("Set windows ip err, err : %v \n", err)
 				return

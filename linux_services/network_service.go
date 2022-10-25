@@ -1,4 +1,4 @@
-package services
+package linux_services
 
 import (
 	"bufio"
@@ -11,20 +11,6 @@ import (
 	"vm-init-utils/modules"
 	"vm-init-utils/utils"
 )
-
-type LinuxService struct{}
-
-func NewLinuxService() *LinuxService {
-	return &LinuxService{}
-}
-
-func (ls *LinuxService) SetHostname(hostname string) error {
-	args := []string{
-		"set-hostname",
-		hostname,
-	}
-	return utils.ExecShell("hostnamectl", args, nil, nil, nil)
-}
 
 func (ls *LinuxService) SetNetWork(network *modules.Network) error {
 	osType, err := utils.GetOSType()

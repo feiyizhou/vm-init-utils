@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"vm-init-utils/common"
 	"vm-init-utils/config"
-	"vm-init-utils/services"
+	"vm-init-utils/linux_services"
 	"vm-init-utils/utils"
 )
 
@@ -26,7 +26,7 @@ var hostnameChangeCmd = &cobra.Command{
 				log.Println("Hostname is empty")
 				return
 			}
-			err := services.NewLinuxService().SetHostname(hostname)
+			err := linux_services.NewLinuxService().SetHostname(hostname)
 			utils.DoOrDieWithMsg(err, "Set hostname failed")
 		default:
 			utils.DieWithMsg(true, "Unsupported os type")
