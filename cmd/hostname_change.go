@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 	"log"
 	"runtime"
@@ -20,6 +21,7 @@ var hostnameChangeCmd = &cobra.Command{
 			confFilePath = args[0]
 		}
 		hostname := config.GetSystemConf(confFilePath).Hostname
+		fmt.Println(runtime.GOOS)
 		switch runtime.GOOS {
 		case common.LINUX:
 			if len(hostname) == 0 {

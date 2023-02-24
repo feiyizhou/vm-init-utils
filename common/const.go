@@ -33,8 +33,6 @@ MACADDR=%s
 IPADDR=%s
 NETMASK=%s
 GATEWAY=%s
-DNS1=%s
-DNS2=%s
 `
 )
 

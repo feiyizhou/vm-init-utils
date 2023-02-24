@@ -45,8 +45,13 @@ func (ls *LinuxService) SetNetWork(network *modules.Network) error {
 
 		// 创建新文件并写入新的网络配置
 		confStr := fmt.Sprintf(common.CentosNetConfTemplate, newConf.Name, newConf.UUID, newConf.Name,
-			newConf.MACAddr, newConf.IPAddr, newConf.NETMask, newConf.GateWay, newConf.DNS1,
-			newConf.DNS2)
+			newConf.MACAddr, newConf.IPAddr, newConf.NETMask, newConf.GateWay)
+		if len(newConf.DNS) > 0 {
+			confStr += fmt.Sprintf("\nDNS=%s", newConf.DNS[0])
+			for i, dns := range newConf.DNS[1:] {
+				confStr += fmt.Sprintf("\nDNS%d=%s", i+1, dns)
+			}
+		}
 		newFile, err := os.Create(filePath)
 		utils.DoOrDieWithMsg(err, "Create new config file failed")
 		_, err = newFile.WriteString(confStr)
@@ -61,9 +66,9 @@ func (ls *LinuxService) SetNetWork(network *modules.Network) error {
 		err = utils.ExecShell("systemctl", args, nil, nil, nil)
 		utils.DieWithMsg(err != nil, "Restart network service failed")
 	case common.Ubuntu:
-		utils.DieWithMsg(true, "Unsupported os type")
+		utils.DieWithMsg(true, fmt.Sprintf("Unsupported os type: %s", osType))
 	default:
-		utils.DieWithMsg(strings.EqualFold("", osType), "Unknown os type")
+		utils.DieWithMsg(strings.EqualFold("", osType), fmt.Sprintf("Unknown os type %s", osType))
 	}
 	return nil
 }
@@ -85,13 +90,8 @@ func rewriteConf(oriConf, network *modules.Network) *modules.Network {
 	if len(network.GateWay) != 0 {
 		oriConf.GateWay = network.GateWay
 	}
-	if len(network.DNS1) != 0 {
-		oriConf.DNS1 = network.DNS1
-	} else if len(oriConf.DNS) != 0 {
-		oriConf.DNS1 = oriConf.DNS
-	}
-	if len(network.DNS2) != 0 {
-		oriConf.DNS2 = network.DNS2
+	if len(network.DNS) != 0 {
+		oriConf.DNS = strings.Split(network.DNSStr, ",")
 	}
 	return oriConf
 }
@@ -136,13 +136,7 @@ func getOriNetworkConf(filePath string) (*modules.Network, error) {
 			oriConf.GateWay = tmpStr
 		}
 		if strings.Contains(string(a), "DNS") {
-			oriConf.DNS = tmpStr
-		}
-		if strings.Contains(string(a), "DNS1") {
-			oriConf.DNS1 = tmpStr
-		}
-		if strings.Contains(string(a), "DNS2") {
-			oriConf.DNS2 = tmpStr
+			oriConf.DNS = append(oriConf.DNS, tmpStr)
 		}
 	}
 	return oriConf, err

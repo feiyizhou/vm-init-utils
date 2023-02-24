@@ -1,50 +1,54 @@
 package cmd
 
 import (
+	"fmt"
+	"github.com/google/martian/log"
 	"github.com/spf13/cobra"
-	"log"
-	"runtime"
-	"vm-init-utils/common"
-	"vm-init-utils/config"
 	"vm-init-utils/linux_services"
 	"vm-init-utils/modules"
-	"vm-init-utils/windows_services"
 )
+
+var (
+	name    string
+	macAddr string
+	ipAddr  string
+	mask    string
+	gateway string
+	dns     string
+)
+
+func init() {
+	ipChangeCmd.Flags().StringVarP(&name, "name", "n", "", "The name of interface")
+	ipChangeCmd.Flags().StringVarP(&macAddr, "macAddr", "m", "", "The mac address of interface")
+	ipChangeCmd.Flags().StringVarP(&ipAddr, "ipAddr", "i", "", "The ipv4 address of interface")
+	ipChangeCmd.Flags().StringVarP(&mask, "mask", "s", "", "The mask of interface")
+	ipChangeCmd.Flags().StringVarP(&gateway, "gateway", "g", "", "The gateway of interface")
+	ipChangeCmd.Flags().StringVarP(&dns, "dns", "d", "", "The dns of interface, eg: 192.168.168.1,192.168.168.2")
+}
 
 var ipChangeCmd = &cobra.Command{
 	Use:   "set-ip",
 	Short: "set-ip",
 	Long:  "set-ip",
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		if len(ipAddr) == 0 {
+			return fmt.Errorf("Must notify a valid ipv4 address ")
+		}
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
-		confFilePath := ""
-		if len(args) != 0 {
-			confFilePath = args[0]
-		}
-		conf := config.GetSystemConf(confFilePath).Network
 		network := &modules.Network{
-			Name:    conf.Name,
-			MACAddr: conf.MACAddr,
-			IPAddr:  conf.IPAddr,
-			NETMask: conf.NETMASK,
-			GateWay: conf.GATEWAY,
-			DNS1:    conf.DNS1,
-			DNS2:    conf.DNS2,
+			Name:    name,
+			MACAddr: macAddr,
+			IPAddr:  ipAddr,
+			NETMask: mask,
+			GateWay: gateway,
+			DNSStr:  dns,
 		}
-		switch runtime.GOOS {
-		case common.LINUX:
-			err := linux_services.NewLinuxService().SetNetWork(network)
-			if err != nil {
-				log.Fatalf("Set linux ip err, err : %v \n", err)
-				return
-			}
-		case common.WINDOWS:
-			err := windows_services.NewWindowsService().SetNetWork(network)
-			if err != nil {
-				log.Fatalf("Set windows ip err, err : %v \n", err)
-				return
-			}
-		default:
-			log.Fatalln("Unknown os kind")
+		err := linux_services.NewLinuxService().SetNetWork(network)
+		if err != nil {
+			log.Errorf("Set linux ip err, err : %v \n", err)
+			return
 		}
 	},
 }

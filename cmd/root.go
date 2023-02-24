@@ -6,9 +6,9 @@ func NewChangeCmd() *cobra.Command {
 	rootCmd := &cobra.Command{}
 
 	rootCmd.AddCommand(
-		hostnameChangeCmd,
+		//hostnameChangeCmd,
 		ipChangeCmd,
-		pwdChangeCmd,
+		//pwdChangeCmd,
 	)
 
 	return rootCmd
