@@ -1,54 +1,63 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
-	"github.com/google/martian/log"
 	"github.com/spf13/cobra"
-	"vm-init-utils/linux_services"
-	"vm-init-utils/modules"
+	"github.com/spf13/pflag"
+	"runtime"
+	"vm-init-utils/applications"
+	"vm-init-utils/options"
+	"vm-init-utils/utils"
+	"vm-init-utils/validators"
 )
 
-var (
-	name    string
-	macAddr string
-	ipAddr  string
-	mask    string
-	gateway string
-	dns     string
-)
-
-func init() {
-	ipChangeCmd.Flags().StringVarP(&name, "name", "n", "", "The name of interface")
-	ipChangeCmd.Flags().StringVarP(&macAddr, "macAddr", "m", "", "The mac address of interface")
-	ipChangeCmd.Flags().StringVarP(&ipAddr, "ipAddr", "i", "", "The ipv4 address of interface")
-	ipChangeCmd.Flags().StringVarP(&mask, "mask", "s", "", "The mask of interface")
-	ipChangeCmd.Flags().StringVarP(&gateway, "gateway", "g", "", "The gateway of interface")
-	ipChangeCmd.Flags().StringVarP(&dns, "dns", "d", "", "The dns of interface, eg: 192.168.168.1,192.168.168.2")
-}
-
-var ipChangeCmd = &cobra.Command{
-	Use:   "set-ip",
-	Short: "set-ip",
-	Long:  "set-ip",
-	PreRunE: func(cmd *cobra.Command, args []string) error {
-		if len(ipAddr) == 0 {
-			return fmt.Errorf("Must notify a valid ipv4 address ")
-		}
+func NewResetNetworkCMD() *cobra.Command {
+	cleanFlagSet := pflag.NewFlagSet("changeDNS", pflag.ContinueOnError)
+	networkFlags := options.NewNetworkFlags()
+	cmd := &cobra.Command{
+		Use:                "set-ip",
+		Short:              "set-ip",
+		Long:               "set-ip",
+		DisableFlagParsing: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := cleanFlagSet.Parse(args); err != nil {
+				return err
+			}
+			cmdArr := cleanFlagSet.Args()
+			if len(cmdArr) > 0 {
+				return fmt.Errorf("unknown command %s", cmdArr[0])
+			}
+			// short-circuit on help
+			help, err := cleanFlagSet.GetBool("help")
+			if err != nil {
+				return errors.New(`"help" flag is non-bool, programmer error, please correct`)
+			}
+			if help {
+				return cmd.Help()
+			}
+			os, err := utils.GetOSType()
+			if len(cmdArr) > 0 {
+				return fmt.Errorf("Failed get os type, err: %v ", err)
+			}
+			networkFlags.OsType = os
+			if err = validators.ValidateFlagSet(*networkFlags); err != nil {
+				return err
+			}
+			applications.NewResetNetworkPipeline(runtime.GOOS).ResetNetwork(networkFlags)
+			return nil
+		},
+	}
+	networkFlags.AddFlags(cleanFlagSet)
+	cleanFlagSet.BoolP("help", "h", false, fmt.Sprintf("help for %s", cmd.Name()))
+	// ugly, but necessary, because Cobra's default UsageFunc and HelpFunc pollute the flagset with global flags
+	const usageFmt = "Usage:\n  %s\n\nFlags:\n%s"
+	cmd.SetUsageFunc(func(cmd *cobra.Command) error {
+		_, _ = fmt.Fprintf(cmd.OutOrStderr(), usageFmt, cmd.UseLine(), cleanFlagSet.FlagUsagesWrapped(2))
 		return nil
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		network := &modules.Network{
-			Name:    name,
-			MACAddr: macAddr,
-			IPAddr:  ipAddr,
-			NETMask: mask,
-			GateWay: gateway,
-			DNSStr:  dns,
-		}
-		err := linux_services.NewLinuxService().SetNetWork(network)
-		if err != nil {
-			log.Errorf("Set linux ip err, err : %v \n", err)
-			return
-		}
-	},
+	})
+	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "%s\n\n"+usageFmt, cmd.Long, cmd.UseLine(), cleanFlagSet.FlagUsagesWrapped(2))
+	})
+	return cmd
 }
