@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"log"
 )
 
@@ -20,4 +21,11 @@ func CheckErr(err error) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+}
+
+func MadeErr(err error, msg string) error {
+	if err != nil {
+		return fmt.Errorf("%s, err: %v", msg, err)
+	}
+	return nil
 }

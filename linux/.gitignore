@@ -15,6 +15,6 @@
 # vendor/
 go.sum
 
-.idea
+../.idea
 
-vm-init
+cipu

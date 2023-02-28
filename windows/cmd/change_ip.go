@@ -1,19 +1,17 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"runtime"
-	"vm-init-utils/applications"
-	"vm-init-utils/options"
-	"vm-init-utils/utils"
-	"vm-init-utils/validators"
+	"vm-init-utils/windows/options"
+	"vm-init-utils/windows/services"
+	"vm-init-utils/windows/utils"
+	"vm-init-utils/windows/validators"
 )
 
 func NewResetNetworkCMD() *cobra.Command {
-	cleanFlagSet := pflag.NewFlagSet("changeDNS", pflag.ContinueOnError)
+	cleanFlagSet := pflag.NewFlagSet("changeWinIP", pflag.ContinueOnError)
 	networkFlags := options.NewNetworkFlags()
 	cmd := &cobra.Command{
 		Use:                "set-ip",
@@ -21,31 +19,31 @@ func NewResetNetworkCMD() *cobra.Command {
 		Long:               "set-ip",
 		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cleanFlagSet.Parse(args); err != nil {
-				return err
+			var (
+				err  error
+				help bool
+			)
+			if err = cleanFlagSet.Parse(args); err != nil {
+				return utils.MadeErr(err, "Filed to parse flag")
 			}
 			cmdArr := cleanFlagSet.Args()
 			if len(cmdArr) > 0 {
-				return fmt.Errorf("unknown command %s", cmdArr[0])
+				return utils.MadeErr(nil, fmt.Sprintf("unknown command %v", cmdArr))
 			}
 			// short-circuit on help
-			help, err := cleanFlagSet.GetBool("help")
+			help, err = cleanFlagSet.GetBool("help")
 			if err != nil {
-				return errors.New(`"help" flag is non-bool, programmer error, please correct`)
+				return utils.MadeErr(err, `"help" flag is non-bool, programmer error, please correct`)
 			}
 			if help {
 				return cmd.Help()
 			}
-			os, err := utils.GetOSType()
-			if len(cmdArr) > 0 {
-				return fmt.Errorf("Failed get os type, err: %v ", err)
-			}
-			networkFlags.OsType = os
+
 			if err = validators.ValidateFlagSet(*networkFlags); err != nil {
-				return err
+				return utils.MadeErr(err, "The param is invalid")
 			}
-			applications.NewResetNetworkPipeline(runtime.GOOS).ResetNetwork(networkFlags)
-			return nil
+
+			return services.NewWindowsService().ReSetNetWork(networkFlags)
 		},
 	}
 	networkFlags.AddFlags(cleanFlagSet)

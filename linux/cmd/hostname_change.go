@@ -3,8 +3,8 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"runtime"
-	"vm-init-utils/common"
-	"vm-init-utils/utils"
+	"vm-init-utils/linux/common"
+	"vm-init-utils/linux/utils"
 )
 
 var hostnameChangeCmd = &cobra.Command{

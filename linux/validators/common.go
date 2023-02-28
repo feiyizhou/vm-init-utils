@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
-	"vm-init-utils/options"
+	"vm-init-utils/linux/options"
 )
 
 func ValidateFlagSet(f options.Network) error {

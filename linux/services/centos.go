@@ -1,13 +1,13 @@
-package linux_services
+package services
 
 import (
 	"fmt"
 	"github.com/vishvananda/netlink"
 	"os"
 	"strings"
-	"vm-init-utils/common"
-	"vm-init-utils/options"
-	"vm-init-utils/utils"
+	"vm-init-utils/linux/common"
+	"vm-init-utils/linux/options"
+	"vm-init-utils/linux/utils"
 )
 
 type CentosService struct{}
@@ -16,37 +16,43 @@ func NewCentosService() *CentosService {
 	return &CentosService{}
 }
 
-func (cs *CentosService) ResetNetwork(network *options.Network) {
+func (cs *CentosService) ResetNetwork(network *options.Network) error {
 	var (
 		filePath string
 		err      error
 		oriConf  map[string]string
 	)
 	filePath, err = cs.getDefaultFilePath(network.Name)
-	utils.DieWithMsg(err != nil, "Get default network interface config file error")
+	if err != nil {
+		return utils.MadeErr(err, "Get default network interface config file error")
+	}
 
 	// 获取原始配置
 	oriConf, err = cs.makeUpConf(filePath)
-	utils.DieWithMsg(err != nil, "Get centos original network config error")
-	utils.DieWithMsg(oriConf == nil, "Centos original network config is empty")
+	if err != nil || oriConf == nil {
+		return utils.MadeErr(err, "Get centos original network config error")
+	}
 
 	// 删除原始文件
-	err = os.Remove(filePath)
-	utils.DieWithMsg(err != nil, "Delete the origin conf file failed")
+	if err = os.Remove(filePath); err != nil {
+		return utils.MadeErr(err, "Delete the origin conf file failed")
+	}
 	if utils.IsExist(fmt.Sprintf("%s-bck", filePath)) {
-		err = os.Remove(fmt.Sprintf("%s-bck", filePath))
-		utils.DieWithMsg(err != nil, "Delete the origin conf back up file failed")
+		if err = os.Remove(fmt.Sprintf("%s-bck", filePath)); err != nil {
+			return utils.MadeErr(err, "Delete the origin conf back up file failed")
+		}
 	}
 
 	// 重写配置
-	err = cs.rewriteNewConf(cs.overrideConf(oriConf, network), filePath)
-	utils.DieWithMsg(err != nil, "Rewrite network configuration failed")
+	if err = cs.rewriteNewConf(cs.overrideConf(oriConf, network), filePath); err != nil {
+		return utils.MadeErr(err, "Rewrite network configuration failed")
+	}
 
 	// 重启网络服务
-	err = utils.ExecCmd("systemctl", []string{"restart", "network"})
-	utils.DieWithMsg(err != nil, "Restart network service failed")
-
-	return
+	if err = utils.ExecCmd("systemctl", []string{"restart", "network"}); err != nil {
+		return utils.MadeErr(err, "Restart network service failed")
+	}
+	return nil
 }
 
 func (cs *CentosService) getDefaultFilePath(name string) (string, error) {

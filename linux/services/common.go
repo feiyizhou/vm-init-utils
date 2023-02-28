@@ -1,10 +1,10 @@
-package linux_services
+package services
 
 import (
 	"fmt"
-	"vm-init-utils/common"
-	"vm-init-utils/options"
-	"vm-init-utils/utils"
+	"vm-init-utils/linux/common"
+	"vm-init-utils/linux/options"
+	"vm-init-utils/linux/utils"
 )
 
 type LinuxService struct{}
@@ -13,14 +13,13 @@ func NewLinuxService() *LinuxService {
 	return &LinuxService{}
 }
 
-func (ls *LinuxService) ReSetNetWork(network *options.Network) {
+func (ls *LinuxService) ReSetNetWork(network *options.Network) error {
 	switch network.OsType {
 	case common.Centos:
-		NewCentosService().ResetNetwork(network)
+		return NewCentosService().ResetNetwork(network)
 	default:
-		utils.DieWithMsg(true, fmt.Sprintf("Unsupported os type: %s", network.OsType))
+		return utils.MadeErr(nil, fmt.Sprintf("Unsupported os type: %s", network.OsType))
 	}
-	return
 }
 
 func (ls *LinuxService) SetPWD(sys *options.Sys) error {

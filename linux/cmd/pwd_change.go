@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 	"log"
 	"runtime"
-	"vm-init-utils/common"
+	"vm-init-utils/linux/common"
 )
 
 var pwdChangeCmd = &cobra.Command{
