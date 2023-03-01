@@ -21,6 +21,7 @@ func (cs *CentosService) ResetNetwork(network *options.Network) error {
 		filePath string
 		err      error
 		oriConf  map[string]string
+		content  = strings.Builder{}
 	)
 	filePath, err = cs.getDefaultFilePath(network.Name)
 	if err != nil {
@@ -44,8 +45,31 @@ func (cs *CentosService) ResetNetwork(network *options.Network) error {
 	}
 
 	// 重写配置
-	if err = cs.rewriteNewConf(cs.overrideConf(oriConf, network), filePath); err != nil {
-		return utils.MadeErr(err, "Rewrite network configuration failed")
+	if !strings.Contains(oriConf["BOOTPROTO"], "static") {
+		content.WriteString(fmt.Sprintf(common.CentosNetConfTemplate, oriConf["NAME"], oriConf["UUID"], oriConf["DEVICE"],
+			network.IPAddr, network.NETMask, network.GateWay))
+		if len(network.MACAddr) > 0 {
+			content.WriteString(fmt.Sprintf("HWADDR=%s\n", network.MACAddr))
+		}
+		if len(network.DNS) > 0 {
+			dnsArr := strings.Split(network.DNS, ",")
+			content.WriteString(fmt.Sprintf("DNS=%s\n", dnsArr[0]))
+			for index, dns := range dnsArr[1:] {
+				content.WriteString(fmt.Sprintf("DNS%d=%s\n", index+1, dns))
+			}
+		}
+		var file *os.File
+		defer file.Close()
+		if file, err = os.OpenFile(filePath, os.O_CREATE|os.O_RDWR, 0666); err != nil {
+			return err
+		}
+		if _, err = file.WriteString(content.String()); err != nil {
+			return err
+		}
+	} else {
+		if err = cs.rewriteNewConf(cs.overrideConf(oriConf, network), filePath); err != nil {
+			return utils.MadeErr(err, "Rewrite network configuration failed")
+		}
 	}
 
 	// 重启网络服务
@@ -56,20 +80,63 @@ func (cs *CentosService) ResetNetwork(network *options.Network) error {
 }
 
 func (cs *CentosService) getDefaultFilePath(name string) (string, error) {
-	var filePath string
+	var (
+		filePath, defaultName string
+		err                   error
+	)
+	defaultName, err = cs.getLinkName()
+	if err != nil {
+		return "", err
+	}
 	if len(name) == 0 {
-		linkName, err := cs.getLinkName()
-		if err != nil {
-			return "", err
-		}
-		if len(linkName) == 0 {
+		if len(defaultName) == 0 {
 			return "", fmt.Errorf("No network interface founded ")
 		}
-		filePath = fmt.Sprintf("%s%s", common.CentosNetConfFilePath, linkName)
+		filePath = fmt.Sprintf("%s%s", common.CentosNetConfFilePath, defaultName)
 	} else {
+		if len(defaultName) == 0 {
+			return "", fmt.Errorf("No network interface founded ")
+		}
+		if err = checkDefaultLinKMAC(defaultName); err != nil {
+			return "", err
+		}
 		filePath = fmt.Sprintf("%s%s", common.CentosNetConfFilePath, name)
 	}
 	return filePath, nil
+}
+
+func checkDefaultLinKMAC(name string) error {
+	var (
+		filePath    = fmt.Sprintf("%s%s", common.CentosNetConfFilePath, name)
+		err         error
+		macConfAddr string
+		content     []byte
+		lines       []string
+	)
+	content, err = utils.ExecCMDWithResult("bash",
+		[]string{"-c", fmt.Sprintf("ifconfig %s | grep ether | awk '{print $2}'", name)}, 10)
+	if err != nil {
+		return utils.MadeErr(err, "Get mac address failed")
+	}
+	lines, err = utils.ReadFileToLines(filePath)
+	if err != nil {
+		return utils.MadeErr(err, "Read default ether config file failed")
+	}
+	for _, line := range lines {
+		if strings.Contains(line, "HWADDR") {
+			macConfAddr = strings.Split(line, "=")[1]
+			break
+		}
+	}
+	if !strings.Contains(strings.ReplaceAll(string(content), " ", ""), macConfAddr) {
+		err = utils.ExecCmd("bash", []string{"-c",
+			fmt.Sprintf("sed -i /HWADDR/d %s", filePath),
+		})
+		if err != nil {
+			return utils.MadeErr(err, "Delete default ether hardware addr config failed")
+		}
+	}
+	return nil
 }
 
 func (cs *CentosService) rewriteNewConf(conf map[string]string, filePath string) error {
@@ -88,6 +155,8 @@ func (cs *CentosService) rewriteNewConf(conf map[string]string, filePath string)
 					content.WriteString(fmt.Sprintf("DNS%d=%s\n", index, dns))
 				}
 			}
+		} else if strings.Contains(k, "BOOTPROTO") {
+			content.WriteString(fmt.Sprintf("%s=static\n", k))
 		} else {
 			content.WriteString(fmt.Sprintf("%s=%s\n", k, v))
 		}
@@ -102,7 +171,7 @@ func (cs *CentosService) rewriteNewConf(conf map[string]string, filePath string)
 func (cs *CentosService) overrideConf(oriConfMap map[string]string, network *options.Network) map[string]string {
 	for k, _ := range oriConfMap {
 		switch true {
-		case strings.Contains(k, "MACADDR") && len(network.MACAddr) != 0:
+		case (strings.Contains(k, "MACADDR") || strings.Contains(k, "HWADDR")) && len(network.MACAddr) != 0:
 			oriConfMap[k] = network.MACAddr
 		case strings.Contains(k, "IPADDR") && len(network.IPAddr) != 0:
 			oriConfMap[k] = network.IPAddr
@@ -126,17 +195,14 @@ func (cs *CentosService) makeUpConf(filePath string) (map[string]string, error) 
 	if oriConfMap, err = cs.getOriNetworkConf(filePath); err != nil {
 		return nil, fmt.Errorf("Failed to get original network config, err: %v ", err)
 	}
-	if oriConfBckMap, err = cs.getOriNetworkConf(bckFilePath); err != nil {
-		return nil, fmt.Errorf("Failed to get original network back up config, err: %v ", err)
-	}
-	for k, v := range oriConfBckMap {
-		if _, ok := oriConfMap[k]; !ok {
-			oriConfMap[k] = v
+	if utils.IsExist(bckFilePath) {
+		if oriConfBckMap, err = cs.getOriNetworkConf(bckFilePath); err != nil {
+			return nil, fmt.Errorf("Failed to get original network back up config, err: %v ", err)
 		}
-	}
-	for k, _ := range oriConfMap {
-		if strings.Contains(k, "BOOTPROTO") {
-			oriConfMap[k] = "static"
+		for k, v := range oriConfBckMap {
+			if _, ok := oriConfMap[k]; !ok {
+				oriConfMap[k] = v
+			}
 		}
 	}
 	return oriConfMap, err
