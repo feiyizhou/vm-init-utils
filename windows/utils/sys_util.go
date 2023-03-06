@@ -5,11 +5,9 @@ import (
 	"strings"
 )
 
-var (
-	WinGBKCode = "936"
-	WinGBKName = "gbk"
-	WinUTFCode = "65001"
-	WinUTFName = "utf"
+const (
+	GBKDecodeCode = "936"
+	UTFDecodeCode = "65001"
 )
 
 func GetWinDecodeType() (string, error) {
@@ -18,10 +16,10 @@ func GetWinDecodeType() (string, error) {
 		return "", err
 	}
 	switch true {
-	case strings.Contains(string(result), WinGBKCode):
-		return WinGBKName, nil
-	case strings.Contains(string(result), WinUTFCode):
-		return WinUTFName, nil
+	case strings.Contains(string(result), GBKDecodeCode):
+		return GBKDecodeCode, nil
+	case strings.Contains(string(result), UTFDecodeCode):
+		return UTFDecodeCode, nil
 	default:
 		return "", fmt.Errorf("Unknown decode type: %s ", string(result))
 	}

@@ -19,14 +19,30 @@ func NewWindowsService() *WindowsService {
 
 func (ws *WindowsService) ReSetNetWork(network *options.Network) error {
 	var (
-		ori, des *options.Network
-		err      error
+		ori, des   *options.Network
+		err        error
+		decodeType string
+		gbkBytes   []byte
 	)
 	ori, err = gerOriNetworkConf()
 	if err != nil {
 		return err
 	}
 	des = coverConf(ori, network)
+
+	// transform decode type of network interface's name
+	if decodeType, err = utils.GetWinDecodeType(); err != nil {
+		return err
+	}
+	if strings.EqualFold(decodeType, utils.GBKDecodeCode) {
+		log.Infof("Local decode type is gbk, transform network interface name to gbk decode")
+		if gbkBytes, err = utils.Utf8ToGbk([]byte(ori.Name)); err != nil {
+			log.Errorf("transform network interface name to gbk decode failed, err: %v \n", err)
+			return err
+		}
+		ori.Name = string(gbkBytes)
+	}
+
 	if err = executeResetNetworkIPAddrConf(des); err != nil {
 		return err
 	}
