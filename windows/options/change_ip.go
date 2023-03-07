@@ -5,7 +5,7 @@ import "github.com/spf13/pflag"
 type Network struct {
 	Name    string `json:"name"`
 	MACAddr string `json:"macAddr"`
-	IPAddr  string `json:"ipAddr" required:"true"`
+	IPAddr  string `json:"ipAddr"`
 	NETMask string `json:"netMask"`
 	GateWay string `json:"gateWay"`
 	DNS     string `json:"dns"`

@@ -43,10 +43,22 @@ func (ws *WindowsService) ReSetNetWork(network *options.Network) error {
 		ori.Name = string(gbkBytes)
 	}
 
+	if strings.EqualFold(network.DHCP, "true") {
+		return executeNetworkToDHCP(network.Name)
+	}
+
 	if err = executeResetNetworkIPAddrConf(des); err != nil {
 		return err
 	}
 	return executeResetNetworkDNSConf(network)
+}
+
+func executeNetworkToDHCP(name string) error {
+	var (
+		dhcpStr string
+	)
+	dhcpStr = fmt.Sprintf("netsh interface ip set address \"%s\" source=dhcp", name)
+	return utils.ExecCmd("cmd.exe", []string{"/C", dhcpStr})
 }
 
 func executeResetNetworkDNSConf(conf *options.Network) error {
@@ -55,31 +67,25 @@ func executeResetNetworkDNSConf(conf *options.Network) error {
 	}
 	var (
 		err                                  error
-		dhcpArgs, primaryArgs, assistantArgs []string
 		dnsArr                               = strings.Split(conf.DNS, ",")
+		dnsDHCPStr, dnsPrimary, dnsAssistant string
 	)
 	if len(dnsArr) == 0 {
 		log.Infof("The dns config is nil, will not change the original config")
 		return nil
 	}
-	dhcpArgs = []string{"interface", "ip", "set", "dns", fmt.Sprintf("\"%s\"", conf.Name), "dhcp"}
-	if err = utils.ExecCmd("netsh", dhcpArgs); err != nil {
+	dnsDHCPStr = fmt.Sprintf("netsh interface ip set dns \"%s\" dhcp", conf.Name)
+	if err = utils.ExecCmd("cmd.exe", []string{"/C", dnsDHCPStr}); err != nil {
 		return utils.MadeErr(err, "Reset dns server to dhcp failed")
 	}
-	primaryArgs = []string{
-		"interface", "ip", "set", "dns",
-		fmt.Sprintf("\"%s\"", conf.Name), "static", dnsArr[0], "primary",
-	}
-	if err = utils.ExecCmd("netsh", primaryArgs); err != nil {
+	dnsPrimary = fmt.Sprintf("netsh interface ip set dns \"%s\" static %s primary", conf.Name, dnsArr[0])
+	if err = utils.ExecCmd("cmd.exe", []string{"/C", dnsPrimary}); err != nil {
 		return utils.MadeErr(err, "Reset dns primary dns server failed")
 	}
 	if len(dnsArr[1:]) > 0 {
 		for _, dns := range dnsArr[1:] {
-			assistantArgs = []string{
-				"interface", "ip", "add", "dns",
-				fmt.Sprintf("\"%s\"", conf.Name), dns,
-			}
-			if err = utils.ExecCmd("netsh", assistantArgs); err != nil {
+			dnsAssistant = fmt.Sprintf("netsh interface ip add dns \"%s\" %s", conf.Name, dns)
+			if err = utils.ExecCmd("cmd.exe", []string{"/C", dnsAssistant}); err != nil {
 				return utils.MadeErr(err, fmt.Sprintf("Add assistant dns server failed, dns server: %s", dns))
 			}
 		}
@@ -88,17 +94,12 @@ func executeResetNetworkDNSConf(conf *options.Network) error {
 }
 
 func executeResetNetworkIPAddrConf(conf *options.Network) error {
-	var err error
-	args := []string{
-		"interface", "ip", "set", "address",
-		fmt.Sprintf("\"%s\"", conf.Name),
-		"source=static",
-		fmt.Sprintf("addr=%s", conf.IPAddr),
-		fmt.Sprintf("mask=%s", conf.NETMask),
-		fmt.Sprintf("gateway=%s", conf.GateWay),
-	}
-	log.Infof("Reset network conf args: %v", args)
-	if err = utils.ExecCmd("netsh", args); err != nil {
+	var (
+		err    error
+		cmdStr = fmt.Sprintf("netsh interface ip set address \"%s\" source=static addr=%s mask=%s gateway=%s",
+			conf.Name, conf.IPAddr, conf.NETMask, conf.GateWay)
+	)
+	if err = utils.ExecCmd("cmd.exe", []string{"/C", cmdStr}); err != nil {
 		err = utils.MadeErr(err, "Failed reset network conf")
 	}
 	return err
